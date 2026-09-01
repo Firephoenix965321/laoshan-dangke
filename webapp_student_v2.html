@@ -36,19 +36,26 @@
   #loader.hide{opacity:0;transform:scale(1.08);pointer-events:none;}
   /* 金色放射光芒层（加密 + 加亮）—— 锚定在党徽中心，光心与党徽中心永远重合 */
   .boot-glow{position:absolute;left:50%;top:50%;width:440px;height:440px;transform:translate(-50%,-50%);pointer-events:none;z-index:0;}
-  .boot-glow::before{content:'';position:absolute;inset:0;border-radius:50%;
+  .boot-glow::before{content:'';position:absolute;inset:0;border-radius:50%;transform:rotate(0deg);
     background:
-      repeating-conic-gradient(from 0deg, rgba(232,200,106,.26) 0deg 2.2deg, transparent 2.2deg 9deg),
-      repeating-conic-gradient(from 5deg, rgba(201,162,39,.46) 0deg 4.5deg, transparent 4.5deg 20deg);
-    opacity:0;filter:blur(1.4px);}
+      repeating-conic-gradient(from 0deg, rgba(232,200,106,.30) 0deg 2.2deg, transparent 2.2deg 9deg),
+      repeating-conic-gradient(from 5deg, rgba(201,162,39,.52) 0deg 4.5deg, transparent 4.5deg 20deg);
+    opacity:0;filter:blur(1.2px);}
   .boot-glow::after{content:'';position:absolute;left:50%;top:50%;width:560px;height:560px;transform:translate(-50%,-50%) scale(.12);
     background:radial-gradient(circle, rgba(255,244,214,.95) 0%, rgba(232,200,106,.55) 13%, rgba(201,162,39,.20) 33%, transparent 60%);
     border-radius:50%;opacity:0;pointer-events:none;mix-blend-mode:screen;}
-  #loader.play .boot-glow::before{animation:rayFade 1.2s 1.2s ease-out forwards,rayBreath 3.4s 2.4s ease-in-out infinite;}
+  /* 金光里错相位闪烁的星点（真正的“金光闪闪”） */
+  .boot-glow .gstar{position:absolute;width:6px;height:6px;border-radius:50%;transform:scale(.3);opacity:0;pointer-events:none;
+    background:radial-gradient(circle,#FFF7D6 0%,rgba(255,231,168,.95) 42%,transparent 72%);
+    box-shadow:0 0 7px 2px rgba(255,231,168,.85),0 0 14px 4px rgba(232,200,106,.45);}
+  #loader.play .boot-glow::before{animation:rayFade 1.1s 1.1s ease-out forwards,rayBreath 1.9s 2.3s ease-in-out infinite,raySpin 18s 2.3s linear infinite;}
   @keyframes rayFade{from{opacity:0}to{opacity:1}}
-  @keyframes rayBreath{0%,100%{filter:blur(1.4px) brightness(.92)}50%{filter:blur(1.4px) brightness(1.18)}}
-  #loader.play .boot-glow::after{animation:rayBurst 1.5s 1.15s ease-out both;}
-  @keyframes rayBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.12)}22%{opacity:1}55%{opacity:.45}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+  @keyframes rayBreath{0%,100%{filter:blur(1.2px) brightness(.80)}50%{filter:blur(1.2px) brightness(1.36)}}
+  @keyframes raySpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  #loader.play .boot-glow::after{animation:coreGlow 2.8s 1.15s ease-in-out infinite;}
+  @keyframes coreGlow{0%{opacity:0;transform:translate(-50%,-50%) scale(.78)}28%{opacity:.95}50%{opacity:.82;transform:translate(-50%,-50%) scale(1.06)}100%{opacity:.5;transform:translate(-50%,-50%) scale(1)}}
+  #loader.play .boot-glow .gstar{animation:gStar 2.2s ease-in-out infinite;}
+  @keyframes gStar{0%,100%{opacity:0;transform:scale(.2)}50%{opacity:1;transform:scale(1.15)}}
   /* 星尘上升 */
   .dust{position:absolute;inset:0;pointer-events:none;}
   .dust i{position:absolute;bottom:-10px;width:2px;height:2px;border-radius:50%;opacity:0;
@@ -1740,7 +1747,17 @@
       <i style="left:93%;animation-duration:12.5s;animation-delay:4.8s"></i>
     </div>
     <div class="emblem-stage">
-      <div class="boot-glow"></div>
+      <div class="boot-glow">
+        <i class="gstar" style="left:22%;top:30%;animation-delay:0s;animation-duration:2.0s"></i>
+        <i class="gstar" style="left:78%;top:26%;animation-delay:.6s;animation-duration:2.4s"></i>
+        <i class="gstar" style="left:35%;top:72%;animation-delay:1.1s;animation-duration:2.2s"></i>
+        <i class="gstar" style="left:68%;top:74%;animation-delay:.3s;animation-duration:2.6s"></i>
+        <i class="gstar" style="left:14%;top:55%;animation-delay:1.5s;animation-duration:1.9s"></i>
+        <i class="gstar" style="left:86%;top:58%;animation-delay:.9s;animation-duration:2.3s"></i>
+        <i class="gstar" style="left:50%;top:14%;animation-delay:1.8s;animation-duration:2.1s"></i>
+        <i class="gstar" style="left:30%;top:18%;animation-delay:.45s;animation-duration:2.5s"></i>
+        <i class="gstar" style="left:60%;top:42%;animation-delay:1.3s;animation-duration:2.7s"></i>
+      </div>
       <svg viewBox="0 0 320 320">
         <defs>
           <radialGradient id="emGlow" cx=".5" cy=".5" r=".5">
