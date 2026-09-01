@@ -232,12 +232,11 @@
   .trail-banner.finish .bt{color:#5e120c;}
   .trail-banner.finish .bd{color:rgba(94,18,12,.78);}
   /* 引路之光 · 沿红途连线行走 */
-  .walker{position:absolute;left:0;top:0;width:16px;height:16px;margin:-8px 0 0 -8px;z-index:2;pointer-events:none;
-    filter:drop-shadow(0 0 5px rgba(224,40,28,.85));offset-rotate:auto;}
-  .walker::before{content:'';position:absolute;right:50%;top:50%;width:74px;height:8px;transform:translateY(-50%);
-    background:linear-gradient(90deg,rgba(224,40,28,0) 0%,rgba(224,40,28,.5) 100%);
-    border-radius:8px;filter:blur(2.5px);}
+  .walker{position:absolute;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;z-index:3;pointer-events:none;
+    filter:drop-shadow(0 0 6px rgba(224,40,28,.9));will-change:left,top,transform;transition:transform .12s ease-out;}
   .walker svg{width:100%;height:100%;display:block;}
+  .trk-mark{fill:#E6402E;}
+  .park2.touched{transform:scale(.96);box-shadow:0 0 0 3px rgba(224,40,28,.32);}
   @keyframes walkMove{from{offset-distance:0%}to{offset-distance:100%}}
   @keyframes pulseGold{0%,100%{box-shadow:0 0 0 4px rgba(255,233,168,.5),0 0 0 5px rgba(255,233,168,.2)}
     50%{box-shadow:0 0 0 4px rgba(255,233,168,.5),0 0 0 13px rgba(255,233,168,0)}}
@@ -3114,17 +3113,53 @@ function renderHome(){
    <div class="bd">六园集章达标后，可申请「六心研学」结业证书，为行走的党课画下句点</div></div>`;
  fin.onclick=()=>openCert();
  wrap.appendChild(fin);
- // 引路之光：沿红途连线（贯穿网格的蛇形回环）行走
- requestAnimationFrame(()=>{
-  const W=wrap.clientWidth,H=wrap.clientHeight;
-  const X=f=>(f*W).toFixed(1), Y=f=>(f*H).toFixed(1);
-  const d=`M${X(.167)},${Y(.25)} Q${X(.5)},${Y(.11)} ${X(.833)},${Y(.25)} `+
-    `Q${X(.97)},${Y(.5)} ${X(.833)},${Y(.75)} Q${X(.5)},${Y(.89)} ${X(.167)},${Y(.75)} `+
-    `Q${X(.03)},${Y(.5)} ${X(.167)},${Y(.25)} Z`;
-  const wk=wrap.querySelector('.walker');
-  const okOff=(window.CSS&&CSS.supports&&CSS.supports('offset-path','path("M0,0 L1,1")'));
-  if(wk&&okOff){ wk.style.offsetPath=`path('${d}')`; wk.style.animation='walkMove 16s linear infinite'; }
-  else if(wk){ wk.style.display='none'; }
+ // 引路之光：沿红途连线灵动行走（自然变速 + 拖尾足迹 + 触红点加速）
+ let boostUntil=0;
+ const wk=wrap.querySelector('.walker');
+ const trkEl=wrap.querySelector('.gtrk');
+ const svgEl=wrap.querySelector('.grid-svg');
+ if(wk&&trkEl&&svgEl){
+  try{
+   const trailG=document.createElementNS('http://www.w3.org/2000/svg','g');
+   const marks=[];
+   for(let i=0;i<24;i++){ const c=document.createElementNS('http://www.w3.org/2000/svg','circle'); c.setAttribute('class','trk-mark'); c.setAttribute('r','0'); c.setAttribute('opacity','0'); trailG.appendChild(c); marks.push(c); }
+   svgEl.appendChild(trailG);
+   const L=trkEl.getTotalLength(); if(!(L>0)) throw new Error('no path length');
+   const baseV=L/16000;              // 基准：约 16 秒走完一圈
+   const trail=[];
+   let dist=Math.random()*L, lastT=performance.now();
+   if(window.__homeRaf)cancelAnimationFrame(window.__homeRaf);
+   const frame=(now)=>{
+    const homeEl=document.getElementById('home');
+    if(!homeEl||!homeEl.classList.contains('active')){ window.__homeRaf=null; return; }  // 离开首页即停，省电
+    const dt=Math.min(48,now-lastT); lastT=now;
+    // 自然变速：像人走路的节奏，快慢自然起伏，不再机械匀速
+    let mul=0.72+0.42*(0.5+0.5*Math.sin(now/620));
+    if(now<boostUntil) mul*=2.7;     // 手指触到红点 → 加速跑动
+    dist=(dist+baseV*mul*dt)%L;
+    const pt=trkEl.getPointAtLength(dist);
+    wk.style.left=pt.x+'%'; wk.style.top=pt.y+'%';
+    const bob=1+0.14*Math.sin(now/170);   // 轻微呼吸/弹跳，更灵动
+    wk.style.transform='scale('+bob.toFixed(3)+')';
+    // 拖尾：沿走过的红途留下渐隐足迹（走过的印记），而非僵直的光条
+    trail.unshift({x:pt.x,y:pt.y}); if(trail.length>marks.length)trail.pop();
+    for(let i=0;i<marks.length;i++){ const t=trail[i];
+      if(!t){ marks[i].setAttribute('opacity','0'); continue; }
+      const k=1-i/marks.length;
+      marks[i].setAttribute('cx',t.x.toFixed(2));
+      marks[i].setAttribute('cy',t.y.toFixed(2));
+      marks[i].setAttribute('r',(1.7*k+0.3).toFixed(2));
+      marks[i].setAttribute('opacity',(0.55*k).toFixed(3));
+    }
+    window.__homeRaf=requestAnimationFrame(frame);
+   };
+   window.__homeRaf=requestAnimationFrame(frame);
+  }catch(e){ if(wk)wk.style.display='none'; }
+ }
+ // 触红点加速：点按六园任一节点即提速跑动
+ wrap.querySelectorAll('.park2').forEach(el=>{
+  const fire=()=>{ boostUntil=performance.now()+1500; el.classList.add('touched'); setTimeout(()=>el.classList.remove('touched'),400); };
+  el.addEventListener('pointerdown',fire); el.addEventListener('touchstart',fire,{passive:true});
  });
  renderHScroll();
  renderDaily();renderAchv();renderShop();
